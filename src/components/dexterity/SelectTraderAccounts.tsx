@@ -19,74 +19,88 @@ export const SelectTraderAccounts: FC = () => {
         fetchTraderAccounts();
     }, [publicKey, manifest]);
 
-const fetchTraderAccounts = useCallback(async () => {
-        if (!publicKey) {console.log('publicKey error');return};
-        if (!manifest) {console.log('manifest error');return};
-        if (!manifest.fields) {console.log('manifest.fields error');return};
-        if (!manifest.fields.wallet.publicKey) {console.log('manifest.fields.wallet.publicKey error');return};
+	const fetchTraderAccounts = useCallback(async () => {
+	        if (!publicKey) {console.log('publicKey error');return};
+	        if (!manifest) {console.log('manifest error');return};
+	        if (!manifest.fields) {console.log('manifest.fields error');return};
+	        if (!manifest.fields.wallet.publicKey) {console.log('manifest.fields.wallet.publicKey error');return};
+	
+	        try {
+	
+					const owner = publicKey
+					const marketProductGroup = new PublicKey(mpgPubkey)
+					const trgs = await manifest.getTRGsOfOwner(owner, marketProductGroup)
+					setTrgsArr(trgs)
+	
+	        } catch (error: any) {
+	            notify({ type: 'error', message: `Selecting Trader Account failed!`, description: error?.message });
+	        }
+	
+	    }, [publicKey, manifest]);
+	
+	const handleCreateTRG = useCallback(async () => {
+	        try {
+	
+	            const marketProductGroup = new PublicKey(mpgPubkey)
+							await manifest.createTrg(marketProductGroup)
+	
+	            fetchTraderAccounts();
+	        } catch (error: any) {
+	            notify({ type: 'error', message: `Creating Trader Account failed!`, description: error?.message });
+	        }
+	    }, [fetchTraderAccounts, manifest]);
+	
+	const handleSelection = useCallback(async (selectedTrgPubkey: string) => {
+	        if (selectedTrgPubkey == "default") return;
+	
+	        const trgPubkey = new PublicKey(selectedTrgPubkey)
+	        const trader = new dexterity.Trader(manifest, trgPubkey)
+	
+					await trader.update()
+	
+					const marketProductGroup = new PublicKey(mpgPubkey)
+					await manifest.updateOrderbooks(marketProductGroup)
+	
+					setTrader(trader)
+	
+	    }, [manifest, setTrader]);
 
-        try {
-
-				const owner = publicKey
-				const marketProductGroup = new PublicKey(mpgPubkey)
-				const trgs = await manifest.getTRGsOfOwner(owner, marketProductGroup)
-				setTrgsArr(trgs)
-
-        } catch (error: any) {
-            notify({ type: 'error', message: `Selecting Trader Account failed!`, description: error?.message });
-        }
-
-    }, [publicKey, manifest]);
-
-    const handleCreateTRG = useCallback(async () => {
-        try {
-
-            // TRG Creation
-
-            fetchTraderAccounts();
-        } catch (error: any) {
-            notify({ type: 'error', message: `Creating Trader Account failed!`, description: error?.message });
-        }
-    }, [fetchTraderAccounts, manifest]);
-
-    const handleSelection = useCallback(async (selectedValue: string) => {
-
-            // TRG Selection & Initiation
-
-    }, [manifest, setTrader]);
 
     return (
-        <div className="flex flex-col items-center justify-center border border-white rounded-lg p-4 mt-4">
-            <h1 className="text-2xl mb-4">Select or Create a Trader Account</h1>
-    
-            {trgsArr.length > 0 ? (
-                <div className="w-full flex flex-col items-center space-y-4">
-                    <div><TraderAccountDropdown accounts={trgsArr} onSelect={handleSelection} />
-                    <span className='ml-5 cursor-pointer' onClick={() => {handleCopy(selectedTrg, 'Trg Pubkey')}}>📋</span></div>
-                    <Button
-                        text="🔄 Load Trader Accounts"
-                        onClick={fetchTraderAccounts}
-                        disabled={!publicKey}
-                        className={`w-full text-md rounded-md ${publicKey ? 'bg-gradient-to-br from-[#80ff7d] to-[#80ff7d] hover:from-white hover:to-purple-300 text-black' : 'bg-gray-300 cursor-not-allowed'}`}
-                    />
-                </div>
-            ) : (
-                <div className="w-full flex flex-col items-center space-y-4">
-                    <Button
-                        text="🔄 Load Trader Accounts"
-                        onClick={fetchTraderAccounts}
-                        disabled={!publicKey}
-                        className={`w-full text-md rounded-md ${publicKey ? 'bg-gradient-to-br from-[#80ff7d] to-[#80ff7d] hover:from-white hover:to-purple-300 text-black' : 'bg-gray-300 cursor-not-allowed'}`}
-                    />
-                    <Button
-                        text="➕ Create New Trader Account"
-                        onClick={handleCreateTRG}
-                        disabled={!publicKey}
-                        className={`w-full text-md rounded-md ${publicKey ? 'bg-gradient-to-br from-[#80ff7d] to-[#80ff7d] hover:from-white hover:to-purple-300 text-black' : 'bg-gray-300 cursor-not-allowed'}`}
-                    />
-                </div>
-            )}
-        </div>
+	    <div className="md:hero mx-auto p-4">
+	      <div className="md:hero-content flex flex-col">
+	        <h1 className="text-center text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-br  from-[#80ff7d] to-[#80ff7d] mt-10 mb-8">
+	          Basics
+	        </h1>
+	        <div className="text-center">
+	          <DefaultInfo />
+	          <SelectTraderAccounts />
+						{/*Right under here*/}
+	          {trader && (
+	            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 p-4">
+	              <div className="col-span-1 md:col-span-1 lg:col-span-1">
+	                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+	                  <div>
+	                    <PlaceLimitOrder />
+	                  </div>
+	                  <div>
+	                    <FundingTrader />
+	                  </div>
+	                </div>
+	                <div className="mt-4">
+	                  <OpenOrders />
+	                </div>
+	              </div>
+	              <div className="col-span-1 md:col-span-1 lg:col-span-1 gap-4">
+	                <div className="mt-4">
+	                  <AccountInfo />
+	                </div>
+	              </div>
+	            </div>
+	          )}
+	        </div>
+	      </div>
+	    </div>
     );
 };
 
