@@ -27,10 +27,7 @@ export const PlaceLimitOrder: FC = () => {
         onConfirm: (txn: string) => notify({ type: 'success', message: 'Order Placed Successfully!', txid: txn })
     }
 
-    const handlePlaceOrder = useCallback(async () => {
-        if (!price || !size || !publicKey || !manifest || !selectedProduct) return;
-
-     const handlePlaceOrder = useCallback(async () => {
+  const handlePlaceOrder = useCallback(async () => {
         if (!price || !size || !publicKey || !manifest || !selectedProduct) return;
 
         const priceFraction = dexterity.Fractional.New(price, 0);
@@ -71,8 +68,6 @@ export const PlaceLimitOrder: FC = () => {
             notify({ type: 'success', message: `Limit ${orderType} Order Placed Successfully!` });
             setIsLoading(false);
         }
-
-    }, [price, size, orderType, publicKey, manifest, trader, selectedProduct]);
 
     const isFormValid = useMemo(() => price !== null && size !== null && orderType !== 'None', [price, size, orderType]);
 
