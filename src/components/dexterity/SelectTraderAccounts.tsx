@@ -19,7 +19,7 @@ export const SelectTraderAccounts: FC = () => {
         fetchTraderAccounts();
     }, [publicKey, manifest]);
 
-    const fetchTraderAccounts = useCallback(async () => {
+const fetchTraderAccounts = useCallback(async () => {
         if (!publicKey) {console.log('publicKey error');return};
         if (!manifest) {console.log('manifest error');return};
         if (!manifest.fields) {console.log('manifest.fields error');return};
@@ -27,7 +27,10 @@ export const SelectTraderAccounts: FC = () => {
 
         try {
 
-            // TRG Fetching
+				const owner = publicKey
+				const marketProductGroup = new PublicKey(mpgPubkey)
+				const trgs = await manifest.getTRGsOfOwner(owner, marketProductGroup)
+				setTrgsArr(trgs)
 
         } catch (error: any) {
             notify({ type: 'error', message: `Selecting Trader Account failed!`, description: error?.message });
